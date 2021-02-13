@@ -11,29 +11,27 @@
     "@types/react": "^17.0.2",
     "@types/react-dom": "^17.0.1",
     "axios": "^0.21.1",
-    "chrome-aws-lambda": "^7.0.0",
     "cloudinary": "^1.24.0",
+    "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
     "firebase": "^8.2.7",
     "firebase-admin": "^9.5.0",
     "node-fetch": "^2.6.1",
     "node-vibrant": "^3.2.1-alpha.1",
-    "playwright-aws-lambda": "^0.6.0",
-    "playwright-core": "^1.8.1",
-    "puppeteer-core": "^7.0.4",
+    "puppeteer": "^7.1.0",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-router-dom": "^5.2.0",
     "react-scripts": "4.0.2",
     "styled-components": "^5.2.1",
     "typescript": "^4.1.5",
+    "valid-url": "^1.0.9",
     "web-vitals": "^1.1.0"
   },
   "scripts": {
     "start": "react-scripts start",
-    "start:lambda": "netlify-lambda serve src/lambda",
-    "build": "npm run build:app && npm run build:lambda",
-    "build:app": "react-scripts build",
-    "build:lambda": "netlify-lambda build src/lambda",
+    "build": "npm run build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -61,8 +59,6 @@
     "@types/aws-lambda": "^8.10.72",
     "@types/puppeteer": "^5.4.3",
     "@types/react-router-dom": "^5.1.7",
-    "@types/styled-components": "^5.1.7",
-    "netlify-lambda": "^2.0.3",
-    "puppeteer": "^7.1.0"
+    "@types/styled-components": "^5.1.7"
   }
 }

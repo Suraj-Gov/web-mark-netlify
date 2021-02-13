@@ -58,7 +58,7 @@ const WebMarkContainer = styled.div<WebMarkContainerProps>`
   @media only screen and (max-width: 800px) {
     overflow-wrap: break-word;
     width: 90vw;
-    padding-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
   }
   & .delete-svg {
     position: absolute;

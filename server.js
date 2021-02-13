@@ -30,7 +30,7 @@ app.get("/", (req, res) => {
   res.json({ status: "woke up" });
 });
 
-app.get("/generate-screenshot", async (req, res) => {
+app.post("/generate-screenshot", async (req, res) => {
   const browser = await puppeteer.launch({
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });

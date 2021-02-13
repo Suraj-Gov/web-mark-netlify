@@ -61,12 +61,15 @@ export default function NewMark() {
     if (existingMark.empty) {
       try {
         const { data } = await axios.post(
-          "https://web-mark.netlify.app/.netlify/functions/generateScreenshot",
+          "https://web-mark.herokuapp.com/generate-screenshot",
           {
             pageUrl: properUrl,
             userId: userContext.uid,
           }
         );
+        if (data.status !== "success") {
+          throw new Error("HEROKU FAILED");
+        }
         const newMark = {
           userId: userContext.uid,
           url: data.url,
@@ -85,6 +88,7 @@ export default function NewMark() {
       } catch (err) {
         console.log(err);
         alert("Something went wrong");
+        alert(err.message);
       }
     } else {
       alert("Mark already exists");

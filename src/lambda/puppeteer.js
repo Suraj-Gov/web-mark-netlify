@@ -1,23 +1,28 @@
-const playwright = require("playwright-aws-lambda");
+const chromium = require("chrome-aws-lambda");
 
-exports.handler = async (event, ctx) => {
+exports.handler = async (event, context) => {
   const pageToScreenshot = JSON.parse(event.body).pageToScreenshot;
 
-  const browser = await playwright.launchChromium({ headless: true });
-  const context = await browser.newContext();
+  const browser = await chromium.puppeteer.launch({
+    executablePath: await chromium.executablePath,
+    args: chromium.args,
+    defaultViewport: chromium.defaultViewport,
+    headless: chromium.headless,
+  });
 
-  const page = await context.newPage();
+  let page = await browser.newPage();
 
   await page.goto(pageToScreenshot);
 
-  const title = await page.title();
+  const screenshot = await page.screenshot({ encoding: "binary" });
 
   await browser.close();
 
   return {
     statusCode: 200,
     body: JSON.stringify({
-      title,
+      message: `Complete screenshot of ${pageToScreenshot}`,
+      buffer: screenshot,
     }),
   };
 };

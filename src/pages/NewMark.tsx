@@ -60,29 +60,36 @@ export default function NewMark() {
       .where("url", "==", properUrl)
       .get();
     if (existingMark.empty) {
-      axios.post(
-        __prod__
-          ? "https://web-mark.herokuapp.com/generate-screenshot"
-          : "http://localhost:3001/generate-screenshot",
-        {
-          pageUrl: properUrl,
+      const res = await fetch(properUrl, {
+        mode: "no-cors",
+      });
+      if (res.status === 0) {
+        axios.post(
+          __prod__
+            ? "https://web-mark.herokuapp.com/generate-screenshot"
+            : "http://localhost:3001/generate-screenshot",
+          {
+            pageUrl: properUrl,
+            userId: userContext.uid,
+          }
+        );
+        const newMark = {
           userId: userContext.uid,
+          url: properUrl,
+          tags: tagsContext.filter((t) => t.length > 0),
+          pageTitle: "-",
+          imageUrl: "-",
+          color: "-",
+          timestamp: firebase.database.ServerValue.TIMESTAMP,
+        };
+        try {
+          const addedMark = await db.collection("webmarks").add(newMark);
+          history.push("/");
+        } catch (err) {
+          alert(err.message);
         }
-      );
-      const newMark = {
-        userId: userContext.uid,
-        url: properUrl,
-        tags: tagsContext.filter((t) => t.length > 0),
-        pageTitle: "-",
-        imageUrl: "-",
-        color: "-",
-        timestamp: firebase.database.ServerValue.TIMESTAMP,
-      };
-      try {
-        const addedMark = await db.collection("webmarks").add(newMark);
-        history.push("/");
-      } catch (err) {
-        alert(err.message);
+      } else {
+        alert("Not a valid URL");
       }
     } else {
       alert("Mark already exists");

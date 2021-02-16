@@ -1,8 +1,9 @@
 import firebase from "../constants/firebase";
 import "firebase/database";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import UserContext from "../contexts/UserContext";
 import styled from "styled-components";
+import { QueryDocumentSnapshot, DocumentData } from "@firebase/firestore-types";
 const db = firebase.firestore();
 
 const StateIndicator = styled.h3`
@@ -37,16 +38,17 @@ const WebMarksContainer = styled.div`
     border-top-left-radius: 10px;
     border-top-right-radius: 10px;
     width: 100%;
+    min-height: 80%;
   }
 `;
 
 interface WebMarkContainerProps {
   bgColor: {
-    rgb: number[]
-  }
+    rgb: number[];
+  };
 }
 
-const getColor = (bgColor:{rgb:number[]}) => {
+const getColor = (bgColor: { rgb: number[] }) => {
   const rgbArr = bgColor.rgb;
   return `rgb(${rgbArr[0]},${rgbArr[1]},${rgbArr[2]})`;
 };
@@ -77,22 +79,60 @@ const WebMarkTitle = styled.p`
 
 const WebMarks: React.FC = () => {
   const { userContext } = useContext(UserContext);
-  const [webMarks, setWebMarks] = useState(null);
+  const [webMarks, setWebMarks] = useState<
+    QueryDocumentSnapshot<DocumentData>[] | null
+  >(null);
+  const isMounted = useRef(true);
 
   useEffect(() => {
+    isMounted.current = true;
     userContext.uid !== "" &&
       (async () => {
-        const webMarks = await db
+        await db
           .collection("webmarks")
           .where("userId", "==", userContext.uid)
           .orderBy("timestamp", "desc")
-          .get();
-        if (webMarks.empty) {
-          // @ts-ignore -if the returning marks are empty, just set empty array. This is intended. sorry ts
-          setWebMarks([]);
-          // @ts-ignore -need to useReducer
-        } else setWebMarks(webMarks.docs.map((i) => i));
+          .onSnapshot((snapshot) => {
+            if (!isMounted.current) {
+              // if the component is unmounted, do not do anything
+              return;
+            }
+            // get the user's webmarks ordered on timestamp
+            if (snapshot.docs.length === 0) {
+              // @ts-ignore if the returning marks are empty, just set empty array. This is intended. sorry ts
+              setWebMarks([]);
+            } else {
+              setWebMarks(
+                // @ts-ignore
+                (prevMarks) =>
+                  // @ts-ignore
+                  snapshot.docChanges().reduce((arr, i, arrIdx) => {
+                    switch (i.type) {
+                      case "added":
+                        // @ts-ignore
+                        // at first, the state starts with an empty array, and marks are added to the empty array
+                        return [...arr, i.doc];
+                      case "modified":
+                        // @ts-ignore
+                        // the modified marks are mapped over the existing state
+                        return prevMarks?.map((prevMark) =>
+                          prevMark.data().url === i.doc.data().url
+                            ? i.doc
+                            : prevMark
+                        );
+                      default:
+                        // if a mark is deleted, just don't do anything, the client handles the deletes and updates in the view
+                        return prevMarks;
+                    }
+                  }, [])
+              );
+            }
+          });
       })();
+
+    return () => {
+      isMounted.current = false;
+    };
   }, [userContext.uid]);
 
   const deleteMark = async (id: string) => {
@@ -110,22 +150,40 @@ const WebMarks: React.FC = () => {
     <StateIndicator>Login to mark websites</StateIndicator>
   ) : webMarks === null ? (
     <StateIndicator>Loading</StateIndicator>
-    // @ts-ignore it'll not be null, it's handled by the previous condition
-  ) : webMarks.length === 0 ? (
+  ) : // @ts-ignore it'll not be null, it's handled by the previous condition
+  webMarks.length === 0 ? (
     <StateIndicator>Add a new mark!</StateIndicator>
   ) : (
     <WebMarksContainer>
       {/* @ts-ignore it'll not be null, it'll be an array */}
       {webMarks.reverse().map((i, idx) => (
-        <WebMarkContainer bgColor={i.data().color} key={idx}>
+        <WebMarkContainer
+          bgColor={
+            i.data().color === "-" ? { rgb: [250, 250, 250] } : i.data().color
+          }
+          key={idx}
+        >
           <a href={i.data().url}>
-            <img src={i.data().imageUrl} alt={i.data().pageTitle} />
+            <img
+              src={i.data().imageUrl === "-" ? "#" : i.data().imageUrl}
+              alt={
+                i.data().pageTitle === "-" ? "Fetching..." : i.data().pageTitle
+              }
+            />
           </a>
           <button onClick={() => deleteMark(i.id)} className="delete-svg">
-            <DeleteSvg fillColor={getColor(i.data().color)} />
+            <DeleteSvg
+              fillColor={getColor(
+                i.data().color === "-"
+                  ? { rgb: [250, 250, 250] }
+                  : i.data().color
+              )}
+            />
           </button>
           <a href={i.data().url}>
-            <WebMarkTitle>{i.data().pageTitle}</WebMarkTitle>
+            <WebMarkTitle>
+              {i.data().pageTitle === "-" ? i.data().url : i.data().pageTitle}
+            </WebMarkTitle>
           </a>
         </WebMarkContainer>
       ))}

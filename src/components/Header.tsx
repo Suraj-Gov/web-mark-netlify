@@ -16,9 +16,9 @@ export default function Header({ children }: Props) {
     <div>
       <TopHeader>
         {/* <Link href="/"> */}
-          <a>
-            <h1 style={{ display: "inline-block" }}>Web Mark</h1>
-          </a>
+        <a href="/">
+          <h1 style={{ display: "inline-block" }}>Web Mark</h1>
+        </a>
         {/* </Link> */}
         {children}
       </TopHeader>

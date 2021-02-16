@@ -9,6 +9,7 @@ import firebase from "../constants/firebase";
 import "firebase/firestore";
 import axios from "axios";
 import history from "../history";
+import { __prod__ } from "../constants/constants";
 
 const db = firebase.firestore();
 
@@ -59,35 +60,28 @@ export default function NewMark() {
       .where("url", "==", properUrl)
       .get();
     if (existingMark.empty) {
-      try {
-        const { data } = await axios.post(
-          "https://web-mark.herokuapp.com/generate-screenshot",
-          {
-            pageUrl: properUrl,
-            userId: userContext.uid,
-          }
-        );
-        if (data.status !== "success") {
-          throw new Error("HEROKU FAILED");
-        }
-        const newMark = {
+      axios.post(
+        __prod__
+          ? "https://web-mark.herokuapp.com/generate-screenshot"
+          : "http://localhost:3001/generate-screenshot",
+        {
+          pageUrl: properUrl,
           userId: userContext.uid,
-          url: data.url,
-          tags: tagsContext.filter((t) => t.length > 0),
-          pageTitle: data.pageTitle,
-          imageUrl: data.imageURL,
-          color: data.color,
-          timestamp: data.timestamp,
-        };
-        try {
-          const addedMark = await db.collection("webmarks").add(newMark);
-          history.push("/");
-        } catch (err) {
-          alert(err.message);
         }
+      );
+      const newMark = {
+        userId: userContext.uid,
+        url: properUrl,
+        tags: tagsContext.filter((t) => t.length > 0),
+        pageTitle: "-",
+        imageUrl: "-",
+        color: "-",
+        timestamp: firebase.database.ServerValue.TIMESTAMP,
+      };
+      try {
+        const addedMark = await db.collection("webmarks").add(newMark);
+        history.push("/");
       } catch (err) {
-        console.log(err);
-        alert("Something went wrong");
         alert(err.message);
       }
     } else {

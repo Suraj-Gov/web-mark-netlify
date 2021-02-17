@@ -47,7 +47,7 @@ export default function NewMark() {
   ) => {
     let properUrl = url;
     if (url.slice(0, 7) !== "http://" && url.slice(0, 8) !== "https://") {
-      properUrl = "http://" + url;
+      properUrl = "https://" + url;
       setUrl(properUrl);
     }
     // @ts-ignore
